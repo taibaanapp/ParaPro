@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "Expense": {
+      "title": "Expense",
+      "description": "บันทึกรายจ่ายต่าง ๆ ในสวนยาง",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "หัวข้อรายจ่าย" },
+        "detail": { "type": "string", "description": "รายละเอียด" },
+        "amount": { "type": "number", "description": "จำนวนเงิน" },
+        "date": { "type": "string", "format": "date-time", "description": "วันที่จ่าย" },
+        "goldPrice": { "type": "number", "description": "ราคาทองขณะนั้น" },
+        "usdRate": { "type": "number", "description": "อัตราแลกเปลี่ยน USD/THB ขณะนั้น" },
+        "createdBy": { "type": "string", "description": "UID ของผู้บันทึก" }
+      },
+      "required": ["title", "amount", "date", "createdBy"]
+    },
+    "Income": {
+      "title": "Income",
+      "description": "บันทึกการขายยางพารา",
+      "type": "object",
+      "properties": {
+        "workerName": { "type": "string", "description": "ชื่อคนงาน" },
+        "weight": { "type": "number", "description": "น้ำหนักยาง (กก.)" },
+        "pricePerKg": { "type": "number", "description": "ราคายางต่อ กก. (บาท)" },
+        "totalAmount": { "type": "number", "description": "เงินรวม" },
+        "workerShare": { "type": "number", "description": "ส่วนแบ่งคนงานที่คำนวณแล้ว" },
+        "workerSharePercent": { "type": "number", "description": "เปอร์เซ็นต์ส่วนแบ่งที่ใช้ในรายการนี้ (เช่น 0.45)" },
+        "date": { "type": "string", "format": "date-time", "description": "วันที่ขาย" },
+        "goldPrice": { "type": "number", "description": "ราคาทองขณะนั้น" },
+        "usdRate": { "type": "number", "description": "อัตราแลกเปลี่ยน USD/THB ขณะนั้น" },
+        "createdBy": { "type": "string", "description": "UID ของผู้บันทึก" }
+      },
+      "required": ["workerName", "weight", "pricePerKg", "totalAmount", "date", "createdBy"]
+    },
+    "Worker": {
+      "title": "Worker",
+      "description": "รายชื่อคนงานเพื่อแยกสวนกรีด",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "ชื่อรายชื่อคนงาน" },
+        "createdBy": { "type": "string", "description": "UID ของผู้บันทึก" }
+      },
+      "required": ["name", "createdBy"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "การตั้งค่าส่วนตัวของผู้ใช้",
+      "type": "object",
+      "properties": {
+        "workerSharePercent": { "type": "number", "description": "เปอร์เซ็นต์ส่วนแบ่งคนงาน (เช่น 0.45)" },
+        "createdBy": { "type": "string", "description": "UID ของผู้บันทึก" }
+      },
+      "required": ["workerSharePercent", "createdBy"]
+    }
+  },
+  "firestore": {
+    "/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Collection สำหรับรายจ่าย"
+    },
+    "/incomes/{incomeId}": {
+      "schema": "Income",
+      "description": "Collection สำหรับรายรับ"
+    },
+    "/workers/{workerId}": {
+      "schema": "Worker",
+      "description": "Collection สำหรับรายชื่อคนงาน"
+    },
+    "/settings/{settingsId}": {
+      "schema": "Settings",
+      "description": "Collection สำหรับการตั้งค่า"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Para Rubber Manager",
+  "description": "ระบบบริหารจัดการรายรับ-รายจ่าย สวนยางพารา พร้อมบันทึกราคาทองและค่าเงินอัตโนมัติ",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

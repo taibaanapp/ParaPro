@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // Validation for Expenses
+    function isValidExpense(data) {
+      return data.keys().hasAll(['title', 'amount', 'date', 'createdBy']) &&
+             data.keys().size() <= 7 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.amount is number && data.amount >= 0 &&
+             data.date is string &&
+             data.createdBy == request.auth.uid &&
+             (!('detail' in data) || (data.detail is string && data.detail.size() <= 1000)) &&
+             (!('goldPrice' in data) || (data.goldPrice is number)) &&
+             (!('usdRate' in data) || (data.usdRate is number));
+    }
+
+    // Validation for Incomes
+    function isValidIncome(data) {
+      return data.keys().hasAll(['workerName', 'weight', 'pricePerKg', 'totalAmount', 'date', 'createdBy']) &&
+             data.keys().size() <= 10 &&
+             data.workerName is string && data.workerName.size() <= 100 &&
+             data.weight is number && data.weight > 0 &&
+             data.pricePerKg is number && data.pricePerKg > 0 &&
+             data.totalAmount is number &&
+             data.date is string &&
+             data.createdBy == request.auth.uid &&
+             (!('workerShare' in data) || (data.workerShare is number)) &&
+             (!('goldPrice' in data) || (data.goldPrice is number)) &&
+             (!('usdRate' in data) || (data.usdRate is number));
+    }
+
+    // Validation for Workers
+    function isValidWorker(data) {
+      return data.keys().hasAll(['name', 'createdBy']) &&
+             data.keys().size() == 2 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.createdBy == request.auth.uid;
+    }
+
+    // Validation for Settings
+    function isValidSettings(data) {
+      return data.keys().hasAll(['workerSharePercent', 'createdBy']) &&
+             data.keys().size() == 2 &&
+             data.workerSharePercent is number && data.workerSharePercent >= 0 && data.workerSharePercent <= 1 &&
+             data.createdBy == request.auth.uid;
+    }
+
+    match /expenses/{expenseId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidExpense(incoming()) && (expenseId == null || isValidId(expenseId));
+      allow update: if isOwner(resource.data.createdBy) && isValidExpense(incoming()) && incoming().createdBy == resource.data.createdBy;
+      allow delete: if isOwner(resource.data.createdBy);
+    }
+
+    match /incomes/{incomeId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidIncome(incoming()) && (incomeId == null || isValidId(incomeId));
+      allow update: if isOwner(resource.data.createdBy) && isValidIncome(incoming()) && incoming().createdBy == resource.data.createdBy;
+      allow delete: if isOwner(resource.data.createdBy);
+    }
+
+    match /workers/{workerId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidWorker(incoming()) && (workerId == null || isValidId(workerId));
+      allow update: if isOwner(resource.data.createdBy) && isValidWorker(incoming()) && incoming().createdBy == resource.data.createdBy;
+      allow delete: if isOwner(resource.data.createdBy);
+    }
+
+    match /settings/{settingsId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidSettings(incoming()) && (settingsId == null || isValidId(settingsId));
+      allow update: if isOwner(resource.data.createdBy) && isValidSettings(incoming()) && incoming().createdBy == resource.data.createdBy;
+      allow delete: if isOwner(resource.data.createdBy);
+    }
+
+    match /registrations/{userId} {
+      // Allow public list so we can count total registered farmers
+      allow list: if true;
+      // Users can only create their own registration record
+      allow create: if isSignedIn() && userId == request.auth.uid;
+      allow get: if true;
+    }
+  }
+}
